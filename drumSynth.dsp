@@ -16,6 +16,8 @@ release = (vslider("[3]release [style:knob][tooltip: release time]",0.7,0,1,0.00
 fc      = filterGroup(vslider("[1]OscFreq  [frequency of the synced oscilator as a Piano Key (PK) number (A440    = key 49)][style:knob]",  49,1,88,1) : pianokey2hz):smooth(0.999);
 Q       = filterGroup(vslider("[2]Q [style:knob][tooltip: decay time]",1.5,0,8,0.001):pow(2)+0.2:smooth(0.999) );
 impVol  = vslider("[1]impVol [style:knob][tooltip: impulse volume]",0.1,0,1,0.001)*100 ;
+FB      = vslider("[2]FB level [style:knob][tooltip: impulse volume]",0.1,0,1,0.001) ;
+
 
 ambN = 1;
 ambChan = ambN*2+1;
@@ -32,7 +34,9 @@ myNoises = multinoise(ambChan):(_*.6,bus(ambChan-1)):wider(ambN,(1-widthGroup(DS
 
 impulses = (velBlock-velBlock':max(0)*impVol),par(i,ambChan-1,0);
 
-filter = par(i, ambChan, resonbp(fc,Q,1));
+filter = par(i, ambChan,(_+_:resonbp(fc,Q,1):autoSat)~(_*FB));
+
+autoSat(x) = x:min(1):max(-1)<:2.0*_ * (1.0-abs(_)*0.5);
 
 env = par(i,ambChan,DSRenv(velBlock,decay,sustain,release)*_);
 
