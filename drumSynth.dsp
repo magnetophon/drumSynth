@@ -18,6 +18,7 @@ Q          = filterGroup(vslider("[2]Q [style:knob][tooltip: decay time]",1.5,0,
 punchLevel = vslider("[1]punch level   [style:knob][tooltip: punch level]",1,0,1,0.001)*-100 ;
 clickLevel = vslider("[2]click level  [style:knob][tooltip: click level  []",1,0,1,0.001)*4;
 preGain    = (vslider("[3]pre sat gain [style:knob][tooltip: gain before saturation]",1,1,11,0.001)+3)/4:pow(3):smooth(0.999) ;
+postGain    = vslider("[4]post sat gain [style:knob][tooltip: gain after saturation]",1,0,11,0.001)/11:pow(2):smooth(0.999) ;
 FB         = vslider("[5]FB level [style:knob][tooltip: impulse volume]",0.1,0,1,0.001) ;
 
 
@@ -38,7 +39,7 @@ impulses(level) = (velBlock-velBlock':max(0)*level),par(i,ambChan-1,0);
 
 // with filter in the signal path , the first few ms. the synth is streo, even when the width envelope should make it mono.
 // todo: find out why.
-filter = par(i, ambChan,((_+_:resonbp(fc,Q,1))~((_*FB):autoSat))*preGain:autoSat);
+filter = par(i, ambChan,((_+_:resonbp(fc,Q,1))~((_*FB):autoSat))*preGain:autoSat*postGain);
 
 autoSat(x) = x:min(1):max(-1)<:2.0*_ * (1.0-abs(_)*0.5);
 
