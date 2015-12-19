@@ -16,9 +16,9 @@ release    = (vslider("[3]release [style:knob][tooltip: release time]",0.7,0,1,0
 fc         = filterGroup(vslider("[1]OscFreq  [frequency of the synced oscilator as a Piano Key (PK) number (A440    = key 49)][style:knob]",  49,1,88,1) : pianokey2hz):smooth(0.999);
 Q          = filterGroup(vslider("[2]Q [style:knob][tooltip: decay time]",1.5,0,8,0.001):pow(2)+0.2:smooth(0.999) );
 punchLevel = vslider("[1]punch level   [style:knob][tooltip: punch level]",1,0,1,0.001)*-100 ;
-clickLevel = vslider("[2]click level  [style:knob][tooltip: click level  []",1,0,1,0.001);
-preGain    = vslider("[3]pre sat gain [style:knob][tooltip: gain before saturation]",1,1,11,0.001):pow(2):smooth(0.999) ;
-FB         = vslider("[3]FB level [style:knob][tooltip: impulse volume]",0.1,0,1,0.001) ;
+clickLevel = vslider("[2]click level  [style:knob][tooltip: click level  []",1,0,1,0.001)*4;
+preGain    = (vslider("[3]pre sat gain [style:knob][tooltip: gain before saturation]",1,1,11,0.001)+3)/4:pow(3):smooth(0.999) ;
+FB         = vslider("[5]FB level [style:knob][tooltip: impulse volume]",0.1,0,1,0.001) ;
 
 
 ambN = 1;
