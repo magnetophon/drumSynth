@@ -8,10 +8,13 @@ import ("hoa.lib");
 noiseGroup(x)              = (hgroup("[1]noise", x));
 widthGroup(x)              = (hgroup("[2]width", x));
 filtersGroup(x)            = (tgroup("[3]filters", x));
-filterGroup(filterIndex,x) = filtersGroup(vgroup("[%filterIndex]filter %filterIndex", x));
-freqGroup(x)               = (hgroup("[1]frequency", x));
-generalFilterGroup(x)      = (hgroup("[2]general", x));
-ampGroup(x)                = (hgroup("[3]amplitude", x));
+    filterGroup(filterIndex,x) = filtersGroup(vgroup("[%filterIndex]filter %filterIndex", x));
+    freqGroup(x)               = (hgroup("[1]frequency", x));
+    noiseFreqGroup(x)          = (hgroup("[2]noise frequency", x));
+    generalFilterGroup(x)      = (hgroup("[3]general", x));
+    ampGroup(x)                = (hgroup("[4]amplitude", x));
+OnGroup(x)            = (hgroup("[4]filter on/off", x));
+    On(i)             = OnGroup(checkbox("[%i]On %i"));
 
 decay                   = (vslider("[01]decay [style:knob][tooltip: decay time]",0.1,0,1,0.001) );
 sustain                 = (vslider("[02]sustain [style:knob][tooltip: sustain level]",0.4,0,1,0.001):pow(3):smooth(0.999) );
@@ -37,14 +40,19 @@ process =
 drumSynth(2);
 
 drumSynth(nrChan) =
-    par(filterI,nrFilters,((myNoises,(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))))
-    :>(par(i,ambChan,_'),impulses(clickLevel)) :>universalDecoder(nrChan);
+par(filterI,nrFilters,((myNoises(filterI),(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))):Ons(filterI))
+    :>(par(i,ambChan,_'),impulses(clickLevel)) :>wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release)))):universalDecoder(nrChan)
+    with {
+    Ons(filterI) = par(i,ambChan,_*On(filterI));
+    };
 
 velBlock = lf_pulsetrainpos(0.5,0.1);
 
-myNoises = par(i,ambChan,sawNoise(freqEnv ,noises(ambChan,i))):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))))
+myNoises(noiseIndex) =
+    par(i,ambChan,sawNoise(freqEnv(noiseIndex) ,noises(ambChan,i)))
+    :(_*.6,bus(ambChan-1))
     with {
-    freqEnv = freqGroup(((startfreq-endfreq)*DSRenv(velBlock,decay,sustain,release))+endfreq: pianokey2hz);
+    freqEnv(i) = filterGroup(i,noiseFreqGroup(((startfreq-endfreq)*DSRenv(velBlock,decay,sustain,release))+endfreq: pianokey2hz));
     };
 /*myNoises = (sawNoise(endfreq,33),multinoise(ambChan-1)):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))));*/
 /*myNoises = multinoise(ambChan):(_*.6,bus(ambChan-1)):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))));*/
