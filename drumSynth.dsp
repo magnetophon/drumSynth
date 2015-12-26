@@ -31,14 +31,30 @@ ambChan = ambN*2+1;
 nrFilters=4;
 
 process =
+/*sawNoise(startfreq,sustain*50)*/
+/*<:bus(2)*/
+/*;*/
 drumSynth(2);
 
-drumSynth(nrChan) = par(filterI,nrFilters,((myNoises,(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env))))):>(par(i,ambChan,_'),impulses(clickLevel)) :>universalDecoder(nrChan);
+drumSynth(nrChan) =
+    par(filterI,nrFilters,((myNoises,(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))))
+    :>(par(i,ambChan,_'),impulses(clickLevel)) :>universalDecoder(nrChan);
 
 velBlock = lf_pulsetrainpos(0.5,0.1);
 
-/*myNoises = multinoise(ambChan):(_*.6,bus(ambChan-1));*/
-myNoises = multinoise(ambChan):(_*.6,bus(ambChan-1)):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))));
+myNoises = par(i,ambChan,sawNoise(freqEnv ,noises(ambChan,i))):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))))
+    with {
+    freqEnv = freqGroup(((startfreq-endfreq)*DSRenv(velBlock,decay,sustain,release))+endfreq: pianokey2hz);
+    };
+/*myNoises = (sawNoise(endfreq,33),multinoise(ambChan-1)):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))));*/
+/*myNoises = multinoise(ambChan):(_*.6,bus(ambChan-1)):wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))));*/
+
+
+sawNoise(freq,noise) = (((((_,periodsamps : fmod :abs) ~ +(1.0+(33*noise)))/periodsamps)*2-1):cos:dcblockerat(freq))*3
+/*sawNoise(freq,noisyness) = ((((_,periodsamps : fmod :abs) ~ +(1.0+(noisyness*noise)))/periodsamps)*2-1):abs*2-1*/
+with {
+  periodsamps = float(ml.SR)/(freq*2); // period in samples (not nec. integer)
+};
 
 impulses(level) = (velBlock-velBlock':max(0)*level),par(i,ambChan-1,0);
 
