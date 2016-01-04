@@ -41,7 +41,7 @@ drumSynth(2);
 
 drumSynth(nrChan) =
 par(filterI,nrFilters,((myNoises(filterI),(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))):Ons(filterI))
-    :>(par(i,ambChan,_'),impulses(clickLevel)) :>wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release)))):universalDecoder(nrChan)
+    :>(par(i,ambChan,_'),impulses(clickLevel)) :>wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))):pow(3)):universalDecoder(nrChan)
     with {
     Ons(filterI) = par(i,ambChan,_*On(filterI));
     };
