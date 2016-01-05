@@ -34,6 +34,7 @@ ambChan = ambN*2+1;
 nrFilters=4;
 
 process =
+/*zita_rev1;*/
 /*sawNoise(startfreq,sustain*50)*/
 /*<:bus(2)*/
 /*;*/
@@ -42,6 +43,15 @@ drumSynth(2);
 drumSynth(nrChan) =
 par(filterI,nrFilters,((myNoises(filterI),(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))):Ons(filterI))
     :>(par(i,ambChan,_'),impulses(clickLevel)) :>wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))):pow(3)):universalDecoder(nrChan)
+    with {
+    Ons(filterI) = par(i,ambChan,_*On(filterI));
+    };
+
+drumSynthAmb(nrChan) =
+par(filterI,nrFilters,
+    ((myNoises(filterI),(impulses(punchLevel(filterI)))):>filterGroup(filterI,filter):(filterGroup(filterI,ampGroup(env)))):Ons(filterI)
+    )
+:>(par(i,ambChan,_'),impulses(clickLevel)) :>wider(ambN,(1-widthGroup(DSRenv(velBlock,decay,sustain,release))):pow(3)):universalDecoder(nrChan)
     with {
     Ons(filterI) = par(i,ambChan,_*On(filterI));
     };
@@ -77,32 +87,31 @@ autoSat(x) = x:min(1):max(-1)<:2.0*_ * (1.0-abs(_)*0.5);
 
 env = par(i,ambChan,DSRenv(velBlock,decay,sustain,release)*_);
 
-Denv(velocity,decay) = (trigger-trigger':max(0):(+:min(_,velocity))~(_*decay_step))
+trigger(velocity) = (velocity>0)-(velocity>0)':max(0);
+
+Denv(velocity,decay) = (trigger(velocity):(+:min(_,velocity))~(_*decay_step))
     with {
-    trigger = velocity>0;
     decay_step = (decay:pow(0.03)/SR*44100)*0.01+0.99;
     };
 
 DRenv(velocity,decay,release) =
-    trigger-trigger':max(0)
+    trigger(velocity)
     :((+:min(velocity))
     ~(_*decay_step))
     :(+~(_*release_step))
     with {
-    trigger = velocity>0;
     decay_step = (decay:pow(0.03)/SR*44100)*0.01+0.99;
-    release_step = ((release:pow(0.03)/SR*44100)*0.01+0.99)*(trigger==0);
+    release_step = ((release:pow(0.03)/SR*44100)*0.01+0.99)*(velocity==0);
     };
 
 DSRenv(velocity,decay,sustain,release) =
-    trigger-trigger':max(0)
+    trigger(velocity)
     :((+:max(sustain*velocity):min(velocity))
     ~(_*decay_step))
     :(+~(_*release_step))
     with {
-    trigger = velocity>0;
     decay_step = (decay:pow(0.03)/SR*44100)*0.01+0.99;
-    release_step = ((release:pow(0.03)/SR*44100)*0.01+0.99)*(trigger==0);
+    release_step = ((release:pow(0.03)/SR*44100)*0.01+0.99)*(velocity==0);
     };
 
 universalDecoder(nrChan) =
